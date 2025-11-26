@@ -6,19 +6,18 @@
         "rule": {
           "interval": [
             {
-              "field": "seconds",
-              "secondsInterval": 10
+              "triggerAtHour": 9
             }
           ]
         }
       },
-      "id": "5f6464c4-e014-430a-80ac-82ec39f0d7cd",
+      "id": "c3bd538c-1cfe-4065-8169-a01bd0d65255",
       "name": "Расписание поиска лидов",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -2992,
-        1232
+        -256,
+        800
       ]
     },
     {
@@ -66,26 +65,26 @@
         "includeOtherFields": true,
         "options": {}
       },
-      "id": "81978035-2ba0-49fe-bbf3-d0a094c832d4",
+      "id": "98d73be0-9c6b-465d-9337-a0a27d877eac",
       "name": "Конфигурация воркфлоу",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2768,
-        1232
+        -32,
+        800
       ]
     },
     {
       "parameters": {
         "jsCode": "// Parse Serper API response and extract company information\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Assuming the response is in item.json\n  const response = item.json;\n  \n  // Check if response has places array (typical Serper API structure)\n  if (response.places && Array.isArray(response.places)) {\n    for (const place of response.places) {\n      // Extract company information from Serper API response\n      const company = {\n        name: place.title || place.name || '',\n        address: place.address || '',\n        phone: (place.phoneNumber || place.phone || '').replace(/^\\+/, '') || '',\n        email: place.email || '',\n        website: place.website || place.link || '',\n        category: place.category || place.type || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n  // Alternative structure: if response has organic results\n  else if (response.organic && Array.isArray(response.organic)) {\n    for (const result of response.organic) {\n      const company = {\n        name: result.title || '',\n        address: result.address || '',\n        phone: (result.phoneNumber || result.phone || '').replace(/^\\+/, '') || '',\n        email: result.email || '',\n        website: result.link || result.url || '',\n        category: result.category || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n  // Handle local results structure\n  else if (response.localResults && Array.isArray(response.localResults)) {\n    for (const local of response.localResults) {\n      const company = {\n        name: local.title || local.name || '',\n        address: local.address || '',\n        phone: (local.phoneNumber || local.phone || '').replace(/^\\+/, '') || '',\n        email: local.email || '',\n        website: local.website || local.link || '',\n        category: local.category || local.type || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n}\n\nreturn results;"
       },
-      "id": "09196cb5-1a9c-4073-aa4b-3de83408b01a",
+      "id": "dbdfd52e-1179-41d1-89e3-62fefc434c95",
       "name": "Парсинг результатов",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2320,
-        1232
+        416,
+        800
       ]
     },
     {
@@ -174,13 +173,13 @@
         },
         "options": {}
       },
-      "id": "7d517d85-b361-4c82-be8b-c9d2184c3fe4",
+      "id": "f78f0edb-d5be-4d95-a824-27897a7df4e7",
       "name": "Сохранение в Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -1872,
-        1232
+        864,
+        800
       ],
       "credentials": {
         "googleSheetsOAuth2Api": {
@@ -201,7 +200,7 @@
           "conditions": [
             {
               "id": "id-1",
-              "leftValue": "={{ $json.phone }}",
+              "leftValue": "={{ $('Сохранение в Google Sheets').item.json.phone }}",
               "operator": {
                 "type": "string",
                 "operation": "notEmpty"
@@ -212,13 +211,13 @@
         },
         "options": {}
       },
-      "id": "42de94e1-775f-4c29-af6e-fc875a6e57aa",
+      "id": "2bfda64a-576c-4eca-becc-c4ad38958ff1",
       "name": "Проверка наличия телефона",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1424,
-        1232
+        1312,
+        800
       ]
     },
     {
@@ -244,48 +243,48 @@
         },
         "options": {}
       },
-      "id": "1e2ad7c0-c169-4acf-928d-218069144ee1",
+      "id": "1e224d80-a554-4458-ae00-29fbc62a02e2",
       "name": "Проверка наличия email",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -1312,
-        1568
+        1536,
+        1024
       ]
     },
     {
       "parameters": {
         "phoneNumberId": "={{ $('Конфигурация воркфлоу').item.json.whatsappPhoneId }}",
-        "recipientPhoneNumber": "={{ $json.phone }}",
+        "recipientPhoneNumber": "={{ $('AI Agent - Генерация предложений').item.json.phone }}",
         "template": "<__PLACEHOLDER_VALUE__Название WhatsApp шаблона__>"
       },
-      "id": "2c26b436-6f72-4ec9-a92c-e9fd55a40e06",
+      "id": "9b31cc88-584b-4c11-896e-68c39f08ec41",
       "name": "Отправка в WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1.1,
       "position": [
-        416,
-        992
+        3136,
+        560
       ],
       "webhookId": "42dd00bb-2c3d-4c01-aa5c-55503e25a943",
       "disabled": true
     },
     {
       "parameters": {
-        "sendTo": "={{ $json.email }}",
+        "sendTo": "={{ $('AI Agent - Генерация предложений').item.json.email }}",
         "subject": "Специальное предложение для вашего бизнеса",
         "message": "={{ $('AI Agent - Генерация предложений').item.json.output }}",
         "options": {
           "senderName": "={{ $('Конфигурация воркфлоу').item.json.emailFrom }}"
         }
       },
-      "id": "f4ecfec0-ef31-4f07-a20e-dbfc99684dae",
+      "id": "6d73c09c-9db4-4728-b0f2-605f5b8b2127",
       "name": "Отправка на Email",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        432,
-        1568
+        3152,
+        1136
       ],
       "webhookId": "4861ba44-f0a1-49cc-b6b4-ea8941abc96a",
       "disabled": true
@@ -297,13 +296,13 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "0d625d95-9c55-4181-92c7-e1f8af924e95",
+      "id": "55040aed-f4be-467b-a895-88beb061e07c",
       "name": "Загрузка базы знаний",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -2992,
-        640
+        -256,
+        208
       ],
       "webhookId": "a1134104-d630-454b-839e-6631b956ac7c"
     },
@@ -316,13 +315,13 @@
           "value": "company_info"
         }
       },
-      "id": "607df219-316b-424a-8035-1acaa1321949",
+      "id": "8c098239-9c75-4c11-9376-f0d7b9ea6d6b",
       "name": "Vector Store - Загрузка",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
       "typeVersion": 1.3,
       "position": [
-        -2736,
-        432
+        0,
+        0
       ]
     },
     {
@@ -331,13 +330,13 @@
         "textSplittingMode": "custom",
         "options": {}
       },
-      "id": "36364622-2a7d-4305-a982-3b2f509e7643",
+      "id": "97e78ef0-ca37-46aa-b8c2-b4c592de446e",
       "name": "Document Loader",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        -2640,
-        656
+        96,
+        224
       ]
     },
     {
@@ -345,24 +344,24 @@
         "chunkOverlap": 200,
         "options": {}
       },
-      "id": "65e94a17-512e-4522-8836-82d7bda2c02d",
+      "id": "21e8e71b-f23c-4065-bced-322048a6c6bc",
       "name": "Text Splitter",
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        -2560,
-        864
+        176,
+        432
       ]
     },
     {
       "parameters": {},
-      "id": "479c0fa9-6029-409e-8edb-ca1cc7e8fc54",
+      "id": "bc43d312-83c6-4392-a590-f8e8be7dcc24",
       "name": "Embeddings - Загрузка",
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -2768,
-        656
+        -32,
+        224
       ],
       "credentials": {
         "googlePalmApi": {
@@ -381,25 +380,24 @@
           "value": "company_info"
         }
       },
-      "id": "c3344c57-1747-454f-99a5-c1243ac60ca0",
+      "id": "219b1ebc-d480-4edb-9546-2ebaa88d01b0",
       "name": "Vector Store Tool",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
       "typeVersion": 1.3,
       "position": [
-        -432,
-        1632
-      ],
-      "disabled": true
+        2336,
+        1072
+      ]
     },
     {
       "parameters": {},
-      "id": "5c7c0ed9-71d7-4b76-91f0-cf4aa445f130",
+      "id": "6dc429f4-c7f5-498c-b77f-28ce0396244f",
       "name": "Embeddings - Tool",
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -432,
-        1840
+        2416,
+        1280
       ],
       "credentials": {
         "googlePalmApi": {
@@ -411,33 +409,33 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=\"Создай персонализированное коммерческое предложение для компании: {{ $('Проверка наличия телефона').first().json.name }}, категория: {{ $('Проверка наличия телефона').first().json.category }}, адрес: {{ $('Проверка наличия телефона').first().json.address }}\"",
+        "text": "=Создай персонализированное коммерческое предложение для компании: {{ $json.name }}, категория: {{ $json.category }}, адрес: {{ $json.address }}",
         "options": {
           "systemMessage": "Ты - старший менеджер по продажам IT-компании AZAT.TEAM. Создай персонализированное коммерческое предложение для ресторана/кафе.\n\nИСПОЛЬЗУЙ БАЗУ ЗНАНИЙ О КОМПАНИИ AZAT.TEAM:\n- Специализация: команда кастомной разработки полного цикла\n- Опыт: 10+ лет, 27+ штатных специалистов, 3500+ проектов в IT\n- Основные направления: кастомное ПО, веб-разработка, мобильные приложения, техническая поддержка, DevOps\n- Отраслевой опыт: SaaS, e-commerce, HoReCa, недвижимость, медицина, образование\n- Технологии: PHP/Laravel, JavaScript/React/Vue, 1C-Битрикс, WordPress, мобильная разработка\n- Контакты: +7 978 295-70-04, @azatteam1, info@azat.team\n\nТВОИ ДЕЙСТВИЯ:\n1. Проанализируй тип заведения (ресторан/кафе) и его потенциальные IT-потребности\n2. Предложи релевантные решения из нашего спектра услуг\n3. Упомяни реальные преимущества: 27+ специалистов, 3500+ проектов, 10+ лет опыта\n4. Дай четкие контакты для связи\n\nСТРУКТУРА:\n- Персонализированное обращение с пониманием специфики заведения\n- Предложение IT-решений для оптимизации их бизнеса\n- Упоминание нашего опыта и экспертизы\n- Призыв к обсуждению конкретных потребностей\n\nВерни ТОЛЬКО текст предложения без дополнительных комментариев.",
           "passthroughBinaryImages": true,
           "enableStreaming": true
         }
       },
-      "id": "428e21ce-51aa-4f98-99ed-1257817035fe",
+      "id": "8431d925-8abb-4078-a440-534a1890c06b",
       "name": "AI Agent - Генерация предложений",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        -496,
-        1280
+        2240,
+        848
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "6b2cfda6-22e8-423f-b9f8-f651cb75209b",
+      "id": "5675e36d-cd2d-4ee5-83ac-c43323c6ec8b",
       "name": "DeepSeek Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
       "typeVersion": 1,
       "position": [
-        -528,
-        1504
+        2208,
+        1072
       ],
       "credentials": {
         "deepSeekApi": {
@@ -457,13 +455,13 @@
         "jsonBody": "={{ { \"q\": $('Конфигурация воркфлоу').item.json.searchQuery } }}",
         "options": {}
       },
-      "id": "e00accd0-5ad2-40ca-a990-d2e1d5c8452d",
+      "id": "93d9b016-ba3b-473f-a2c7-910c4c88d16d",
       "name": "Поиск",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2544,
-        1232
+        192,
+        800
       ],
       "credentials": {
         "httpBearerAuth": {
@@ -523,10 +521,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -2096,
-        1232
+        640,
+        800
       ],
-      "id": "3c8ce8c3-cb96-41ec-b80e-c1f99479f603",
+      "id": "7cc1f29d-6c19-4fea-93b7-fbe789304740",
       "name": "Edit Fields"
     },
     {
@@ -535,13 +533,13 @@
         "key": "={{ 'whatsapp_daily_count:' + $now.toFormat('yyyy-MM-dd') }}",
         "options": {}
       },
-      "id": "50fb50f7-8c32-402e-a3cb-67619038e887",
+      "id": "f08c9f20-ef16-4527-8a75-5877c3d6db87",
       "name": "Redis - Проверка лимита WhatsApp",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -1152,
-        976
+        1760,
+        736
       ],
       "credentials": {
         "redis": {
@@ -556,13 +554,13 @@
         "key": "={{ 'email_daily_count:' + $now.toFormat('yyyy-MM-dd') }}",
         "options": {}
       },
-      "id": "70bd37b9-03ba-4903-a333-ad72abf6e05c",
+      "id": "2c5dace3-8788-4e41-bc90-6c8f4dabc2c7",
       "name": "Redis - Проверка лимита Email",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -1088,
-        1552
+        1760,
+        1136
       ],
       "credentials": {
         "redis": {
@@ -578,13 +576,13 @@
         "expire": true,
         "ttl": 86400
       },
-      "id": "1139d672-e4f5-4658-9b6a-a976b6c4d635",
+      "id": "475b3476-eadd-4689-8398-a99c32f60905",
       "name": "Redis - Инкремент счетчика WhatsApp",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -32,
-        960
+        2704,
+        528
       ],
       "credentials": {
         "redis": {
@@ -600,13 +598,13 @@
         "expire": true,
         "ttl": 86400
       },
-      "id": "747a0836-463b-42e4-9b8a-5948765783bb",
+      "id": "2263f44a-a87f-4a7d-8106-7bfe12462299",
       "name": "Redis - Инкремент счетчика Email",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        -16,
-        1664
+        2720,
+        1232
       ],
       "credentials": {
         "redis": {
@@ -627,8 +625,8 @@
           "conditions": [
             {
               "id": "id-1",
-              "leftValue": "={{ $json.count }}",
-              "rightValue": 3,
+              "leftValue": "={{ $('Redis - Проверка лимита WhatsApp').item.json.value ?? 0 }}",
+              "rightValue": 25,
               "operator": {
                 "type": "number",
                 "operation": "lt"
@@ -639,29 +637,28 @@
         },
         "options": {}
       },
-      "id": "55ba4600-e276-4890-8a54-e31b0746a86b",
+      "id": "2708d612-66af-4c33-9ef5-843350722004",
       "name": "Проверка лимита WhatsApp (25/день)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -752,
-        976
+        1984,
+        736
       ]
     },
     {
       "parameters": {
         "conditions": {
           "options": {
-            "caseSensitive": true,
+            "caseSensitive": false,
             "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
+            "typeValidation": "loose"
           },
           "conditions": [
             {
               "id": "id-1",
-              "leftValue": "={{ parseInt($('Redis - Проверка лимита Email').first().json?.propertyName) || 0 }}",
-              "rightValue": 50,
+              "leftValue": "={{ $('Redis - Проверка лимита Email').item.json.value ?? 0 }}",
+              "rightValue": "50",
               "operator": {
                 "type": "number",
                 "operation": "lt"
@@ -672,13 +669,13 @@
         },
         "options": {}
       },
-      "id": "6b4a2cd6-9f89-4722-b762-1d16f1b7f0bb",
+      "id": "e0464560-c036-408a-87ce-c8457f6e1d29",
       "name": "Проверка лимита Email (50/день)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -736,
-        1440
+        1984,
+        1136
       ]
     },
     {
@@ -773,13 +770,13 @@
         },
         "options": {}
       },
-      "id": "18d888ad-6c99-4a23-9d1a-6ae1edaed055",
+      "id": "afafee4e-67a7-4d53-bba1-2beb7b2c8ec5",
       "name": "PostgreSQL - Сохранение лида",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        -1648,
-        1376
+        1088,
+        944
       ],
       "credentials": {
         "postgres": {
@@ -803,9 +800,9 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "lead_name": "={{ $json.name }}",
-            "contact_type": "whatsapp",
-            "contact_value": "={{ $json.phone }}",
+            "lead_name": "={{ $('AI Agent - Генерация предложений').item.json.name }}",
+            "contact_type": "={{ $('Отправка в WhatsApp').item.json ? 'whatsapp' : 'email' }}",
+            "contact_value": "={{ $('Отправка в WhatsApp').item.json ? $('AI Agent - Генерация предложений').item.json.phone : $('AI Agent - Генерация предложений').item.json.email }}",
             "sent_at": "={{ $now }}",
             "status": "sent"
           },
@@ -860,13 +857,13 @@
         },
         "options": {}
       },
-      "id": "11d37c0c-ca40-4d33-b989-9ac6d8f5db93",
-      "name": "PostgreSQL - Логирование отправки WhatsApp",
+      "id": "f7d0bd54-cc0f-48be-b787-d9c79c5c3110",
+      "name": "PostgreSQL - Логирование отправки",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        672,
-        992
+        3152,
+        912
       ],
       "credentials": {
         "postgres": {
@@ -874,119 +871,6 @@
           "name": "Postgres account"
         }
       }
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "mode": "name",
-          "value": "outreach_log"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "lead_name": "={{ $json.name }}",
-            "contact_type": "email",
-            "contact_value": "={{ $json.email }}",
-            "sent_at": "={{ $now }}",
-            "status": "sent"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "lead_name",
-              "displayName": "lead_name",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "contact_type",
-              "displayName": "contact_type",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "contact_value",
-              "displayName": "contact_value",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "sent_at",
-              "displayName": "sent_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "status",
-              "displayName": "status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "f62a379f-3a47-493f-b568-47dd5eb4d98c",
-      "name": "PostgreSQL - Логирование отправки Email",
-      "type": "n8n-nodes-base.postgres",
-      "typeVersion": 2.6,
-      "position": [
-        672,
-        1568
-      ],
-      "credentials": {
-        "postgres": {
-          "id": "1onM97lT9TEilEb6",
-          "name": "Postgres account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const redisData = $('Redis - Проверка лимита WhatsApp').first().json;\nconst value = redisData.propertyName ? parseInt(redisData.propertyName) : 0;\nreturn [{ json: { count: value } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -960,
-        976
-      ],
-      "id": "2312f3a0-eecb-4961-9fce-e01787ba0fab",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "jsCode": "const redisData = $('Redis - Проверка лимита Email').first().json;\nconst value = redisData.propertyName ? parseInt(redisData.propertyName) : 0;\nreturn [{ json: { count: value } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -912,
-        1552
-      ],
-      "id": "69a50a3a-c012-4f9a-a3ab-dbc8309a2095",
-      "name": "Code in JavaScript1"
     }
   ],
   "pinData": {},
@@ -1044,6 +928,11 @@
       "main": [
         [
           {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Redis - Проверка лимита WhatsApp",
             "type": "main",
             "index": 0
@@ -1062,104 +951,12 @@
       "main": [
         [
           {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "Redis - Проверка лимита Email",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Redis - Проверка лимита WhatsApp": {
-      "main": [
-        [
-          {
-            "node": "Code in JavaScript",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Проверка лимита WhatsApp (25/день)": {
-      "main": [
-        [
-          {
-            "node": "AI Agent - Генерация предложений",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Redis - Проверка лимита Email": {
-      "main": [
-        [
-          {
-            "node": "Code in JavaScript1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Проверка лимита Email (50/день)": {
-      "main": [
-        [
-          {
-            "node": "AI Agent - Генерация предложений",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent - Генерация предложений": {
-      "main": [
-        [
-          {
-            "node": "Отправка в WhatsApp",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Отправка на Email",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Redis - Инкремент счетчика WhatsApp",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Отправка в WhatsApp": {
-      "main": [
-        [
-          {
-            "node": "Redis - Инкремент счетчика WhatsApp",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "PostgreSQL - Логирование отправки WhatsApp",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Отправка на Email": {
-      "main": [
-        [
-          {
-            "node": "Redis - Инкремент счетчика Email",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "PostgreSQL - Логирование отправки Email",
             "type": "main",
             "index": 0
           }
@@ -1243,6 +1040,32 @@
         ]
       ]
     },
+    "AI Agent - Генерация предложений": {
+      "main": [
+        [
+          {
+            "node": "Отправка в WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Отправка на Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis - Инкремент счетчика WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis - Инкремент счетчика Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Поиск": {
       "main": [
         [
@@ -1276,7 +1099,7 @@
         ]
       ]
     },
-    "Code in JavaScript": {
+    "Redis - Проверка лимита WhatsApp": {
       "main": [
         [
           {
@@ -1287,11 +1110,77 @@
         ]
       ]
     },
-    "Code in JavaScript1": {
+    "Проверка лимита WhatsApp (25/день)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis - Инкремент счетчика WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Отправка в WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправка в WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL - Логирование отправки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis - Проверка лимита Email": {
       "main": [
         [
           {
             "node": "Проверка лимита Email (50/день)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка лимита Email (50/день)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis - Инкремент счетчика Email": {
+      "main": [
+        [
+          {
+            "node": "Отправка на Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправка на Email": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL - Логирование отправки",
             "type": "main",
             "index": 0
           }
@@ -1303,11 +1192,11 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "f94a4cc3-2a9f-4932-98ab-5177dde8b1ed",
+  "versionId": "715c1f64-5d9b-4428-8679-4dc2fc9a75c3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "bbfa5f7c96e27bc6f23f9e6b62e6e7acf6ae0a214bb518958b0145287aa51a70"
   },
-  "id": "LdJzou9t43tLUpvX",
+  "id": "T3PbxrjD9KWmJZJ7",
   "tags": []
 }
