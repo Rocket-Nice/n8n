@@ -1,0 +1,355 @@
+{
+  "name": "DeepSeek RAG Telegram Bot with Google Drive Company Knowledge Base",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "c2c4d78e-5091-42ad-8e62-6bfc0d80db61",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -880,
+        416
+      ],
+      "webhookId": "9aaf0a0f-78b4-4ca9-bf92-f3cc83ca2173",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ui2zBJt26rCLl2ZV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "<__PLACEHOLDER_VALUE__Google Drive File ID__>"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {}
+          }
+        }
+      },
+      "id": "5809a526-0828-4929-89cb-0514bc0faa00",
+      "name": "Download Company File from Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -464,
+        208
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "company_knowledge"
+        }
+      },
+      "id": "d14531d5-d755-4f73-a9a4-fe7314175dcf",
+      "name": "Vector Store - Insert Documents",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "2a08f3de-8354-468b-8602-3485b25102b5",
+      "name": "Document Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "251b08c0-5acf-4919-b496-5db19e232294",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        176,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are a helpful AI assistant with access to company knowledge base. Your role is to answer questions about the company using the information from the knowledge base.\n\nWhen answering:\n1. Always use the company_knowledge_search tool to find relevant information\n2. Base your answers on the retrieved information\n3. If you cannot find the answer in the knowledge base, say so clearly\n4. Be concise and professional in your responses\n5. Cite specific information from the knowledge base when possible"
+        }
+      },
+      "id": "0ff00fe7-f557-4958-8862-83594a23285b",
+      "name": "DeepSeek AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -608,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "02116206-4a94-4a31-9bf4-ff84651abda5",
+      "name": "DeepSeek Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        832
+      ],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "fvf5AkF1AzUykjft",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "id": "5d502626-a1dc-477d-9188-f03e4e09d3b6",
+      "name": "Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -528,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "e99c9d92-83bc-4bb2-9e0e-b7ad2202bb32",
+      "name": "Send Telegram Response",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        608
+      ],
+      "webhookId": "3d842d2f-9486-4a50-bfab-9c37dd99ae9d",
+      "credentials": {
+        "telegramApi": {
+          "id": "Ui2zBJt26rCLl2ZV",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search through company knowledge base to find information about the company, products, services, policies, and procedures",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "company_knowledge"
+        }
+      },
+      "id": "4fef2683-20fb-4ec4-8f17-43b14c218aa0",
+      "name": "Vector Store Tool",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        -400,
+        832
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d49f941d-f0ac-430a-9733-43f6550230f6",
+      "name": "Google Gemini Embeddings - Insert",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        224
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iACrETCQxzxSGltW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "df29d9b1-b718-4326-9693-4f4c69fc5606",
+      "name": "Google Gemini Embeddings - Tool",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        1040
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iACrETCQxzxSGltW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download Company File from Google Drive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "DeepSeek AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Company File from Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Vector Store - Insert Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Vector Store - Insert Documents",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "DeepSeek AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "DeepSeek AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "DeepSeek AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Embeddings - Insert": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store - Insert Documents",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Embeddings - Tool": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a185f07e-166b-4954-94ad-3a012aaafe39",
+  "meta": {
+    "instanceId": "e211225f650456b224165f0bfea59b182aeb92c495e1914e389600a9c76ab95c"
+  },
+  "id": "txUgNgQDatFi5MFJ",
+  "tags": []
+}

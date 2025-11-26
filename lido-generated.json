@@ -1,0 +1,743 @@
+{
+  "name": "DeepSeek RAG Telegram Bot with Google Drive Company Knowledge Base",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "0904d85b-d424-4712-a888-2850f11f109f",
+      "name": "Расписание поиска лидов",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -112,
+        2592
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "searchQuery",
+              "value": "рестораны кафе Москва",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "googleSheetId",
+              "value": "1toQrsU0o6Avh_-DxcexpdE6xFxDmT3axmbq94ZORouA",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "whatsappPhoneId",
+              "value": "<__PLACEHOLDER_VALUE__WhatsApp Phone Number ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "telegramChatId",
+              "value": "<__PLACEHOLDER_VALUE__Telegram Chat ID для уведомлений__>",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "emailFrom",
+              "value": "<__PLACEHOLDER_VALUE__Email отправителя__>",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "serperApiKey",
+              "value": "8c02e8532993970497e4baf5344ca9191bbf94a6",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "94663bb3-fe4d-409b-bf75-b60ed4550e1a",
+      "name": "Конфигурация воркфлоу",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        2592
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Serper API response and extract company information\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Assuming the response is in item.json\n  const response = item.json;\n  \n  // Check if response has places array (typical Serper API structure)\n  if (response.places && Array.isArray(response.places)) {\n    for (const place of response.places) {\n      // Extract company information from Serper API response\n      const company = {\n        name: place.title || place.name || '',\n        address: place.address || '',\n        phone: (place.phoneNumber || place.phone || '').replace(/^\\+/, '') || '',\n        email: place.email || '',\n        website: place.website || place.link || '',\n        category: place.category || place.type || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n  // Alternative structure: if response has organic results\n  else if (response.organic && Array.isArray(response.organic)) {\n    for (const result of response.organic) {\n      const company = {\n        name: result.title || '',\n        address: result.address || '',\n        phone: (result.phoneNumber || result.phone || '').replace(/^\\+/, '') || '',\n        email: result.email || '',\n        website: result.link || result.url || '',\n        category: result.category || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n  // Handle local results structure\n  else if (response.localResults && Array.isArray(response.localResults)) {\n    for (const local of response.localResults) {\n      const company = {\n        name: local.title || local.name || '',\n        address: local.address || '',\n        phone: (local.phoneNumber || local.phone || '').replace(/^\\+/, '') || '',\n        email: local.email || '',\n        website: local.website || local.link || '',\n        category: local.category || local.type || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n}\n\nreturn results;"
+      },
+      "id": "4cb7a4ee-8b56-472f-b3e8-2fca3a140426",
+      "name": "Парсинг результатов",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        2592
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Конфигурация воркфлоу').item.json.googleSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 724762324,
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1toQrsU0o6Avh_-DxcexpdE6xFxDmT3axmbq94ZORouA/edit#gid=724762324"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "77dd20c5-b39b-4d38-a451-fbcb8c947850",
+      "name": "Сохранение в Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        2592
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vknB4muXwHEdF2tq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Сохранение в Google Sheets').item.json.phone }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "45fb0220-9e02-46a5-9077-3c2880fa9469",
+      "name": "Проверка наличия телефона",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        2592
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9a5f3114-50f1-420f-9a20-452d4e414051",
+      "name": "Проверка наличия email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        2800
+      ]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "={{ $('Конфигурация воркфлоу').item.json.whatsappPhoneId }}",
+        "recipientPhoneNumber": "={{ $('AI Agent - Генерация предложений').item.json.phone }}",
+        "template": "<__PLACEHOLDER_VALUE__Название WhatsApp шаблона__>"
+      },
+      "id": "d680acf1-c2e4-4465-b10b-4fc9b51a4420",
+      "name": "Отправка в WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        2640
+      ],
+      "webhookId": "42dd00bb-2c3d-4c01-aa5c-55503e25a943",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('AI Agent - Генерация предложений').item.json.email }}",
+        "subject": "Специальное предложение для вашего бизнеса",
+        "message": "={{ $('AI Agent - Генерация предложений').item.json.output }}",
+        "options": {
+          "senderName": "={{ $('Конфигурация воркфлоу').item.json.emailFrom }}"
+        }
+      },
+      "id": "f9da8176-77a6-41e3-a036-1d0481cdf42f",
+      "name": "Отправка на Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2064,
+        2304
+      ],
+      "webhookId": "4861ba44-f0a1-49cc-b6b4-ea8941abc96a",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-company-info",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "d3b7a659-add9-4455-b6c6-a0ec39efc030",
+      "name": "Загрузка базы знаний",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        1664
+      ],
+      "webhookId": "a1134104-d630-454b-839e-6631b956ac7c"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "company_info"
+        }
+      },
+      "id": "0eb32b12-117c-48c6-bc2f-c1eaf7dda995",
+      "name": "Vector Store - Загрузка",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        1664
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "3aa3049b-cd01-43c5-87b3-fa04fcc0b6e8",
+      "name": "Document Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        1888
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "1eadc490-9d8e-4239-bf7b-1ba9182a3b1c",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        432,
+        2096
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "781d3635-f5f3-45d0-a4ca-149e399989a6",
+      "name": "Embeddings - Загрузка",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        224,
+        1888
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qDXeYxn6I0FrTUIa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Поиск информации о нашей компании, продуктах и услугах для создания персонализированных предложений",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "company_info"
+        }
+      },
+      "id": "f45cdada-648f-47ec-9722-ca1d8aefb3cd",
+      "name": "Vector Store Tool",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        1696,
+        2528
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "803b64cd-939e-40cf-98e7-403f2710337d",
+      "name": "Embeddings - Tool",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        2736
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qDXeYxn6I0FrTUIa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Создай персонализированное коммерческое предложение для компании: {{ $json.name }}, категория: {{ $json.category }}, адрес: {{ $json.address }}",
+        "options": {
+          "systemMessage": "Ты - старший менеджер по продажам IT-компании AZAT.TEAM. Создай персонализированное коммерческое предложение для ресторана/кафе.\n\nИСПОЛЬЗУЙ БАЗУ ЗНАНИЙ О КОМПАНИИ AZAT.TEAM:\n- Специализация: команда кастомной разработки полного цикла\n- Опыт: 10+ лет, 27+ штатных специалистов, 3500+ проектов в IT\n- Основные направления: кастомное ПО, веб-разработка, мобильные приложения, техническая поддержка, DevOps\n- Отраслевой опыт: SaaS, e-commerce, HoReCa, недвижимость, медицина, образование\n- Технологии: PHP/Laravel, JavaScript/React/Vue, 1C-Битрикс, WordPress, мобильная разработка\n- Контакты: +7 978 295-70-04, @azatteam1, info@azat.team\n\nТВОИ ДЕЙСТВИЯ:\n1. Проанализируй тип заведения (ресторан/кафе) и его потенциальные IT-потребности\n2. Предложи релевантные решения из нашего спектра услуг\n3. Упомяни реальные преимущества: 27+ специалистов, 3500+ проектов, 10+ лет опыта\n4. Дай четкие контакты для связи\n\nСТРУКТУРА:\n- Персонализированное обращение с пониманием специфики заведения\n- Предложение IT-решений для оптимизации их бизнеса\n- Упоминание нашего опыта и экспертизы\n- Призыв к обсуждению конкретных потребностей\n\nВерни ТОЛЬКО текст предложения без дополнительных комментариев.",
+          "passthroughBinaryImages": true,
+          "enableStreaming": true
+        }
+      },
+      "id": "15956f7e-a141-41fe-83f1-16b5c1b4c9ca",
+      "name": "AI Agent - Генерация предложений",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1600,
+        2304
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "26a14a71-aa77-43f7-9e78-c57b8ec7b91f",
+      "name": "DeepSeek Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        2528
+      ],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "BHQLg9kDnquSpFF4",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/places",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"q\": $('Конфигурация воркфлоу').item.json.searchQuery } }}",
+        "options": {}
+      },
+      "id": "2e9e3d72-2360-4022-bf98-0a72584da25b",
+      "name": "Поиск",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        336,
+        2592
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "2oTVsSh01U37U69H",
+          "name": "Bearer Auth account"
+        },
+        "httpHeaderAuth": {
+          "id": "8wBkB02ni38MM9Vh",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5344c100-0888-4f70-a3bf-63c82fcfe00b",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "6b790292-b553-4279-90eb-a309bc83a811",
+              "name": "address",
+              "value": "={{ $json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "fe4f46b7-0a3a-491c-aed3-39e344881efd",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "85c087e7-f1c0-4218-a180-0716994c6ab8",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "4e8d03a8-7d63-4e59-8ff1-51f31d1aa1d6",
+              "name": "website",
+              "value": "={{ $json.website }}",
+              "type": "string"
+            },
+            {
+              "id": "4ae503ca-2c12-49b5-8a64-1507411d3af1",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        2592
+      ],
+      "id": "5c7d85f5-1756-42b3-afd1-4298335934fd",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Расписание поиска лидов": {
+      "main": [
+        [
+          {
+            "node": "Конфигурация воркфлоу",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Конфигурация воркфлоу": {
+      "main": [
+        [
+          {
+            "node": "Поиск",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсинг результатов": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохранение в Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Проверка наличия телефона",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка наличия телефона": {
+      "main": [
+        [
+          {
+            "node": "Отправка в WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Проверка наличия email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка наличия email": {
+      "main": [
+        [
+          {
+            "node": "Отправка на Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Загрузка базы знаний": {
+      "main": [
+        [
+          {
+            "node": "Vector Store - Загрузка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Vector Store - Загрузка",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings - Загрузка": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store - Загрузка",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings - Tool": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Генерация предложений": {
+      "main": [
+        [
+          {
+            "node": "Отправка в WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Отправка на Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Поиск": {
+      "main": [
+        [
+          {
+            "node": "Парсинг результатов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Сохранение в Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9b6bc41d-7645-4a7a-b798-89d94418c7f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bbfa5f7c96e27bc6f23f9e6b62e6e7acf6ae0a214bb518958b0145287aa51a70"
+  },
+  "id": "4MA7eUtlOJWVEjEr",
+  "tags": []
+}

@@ -1,0 +1,1201 @@
+{
+  "name": "DeepSeek RAG Telegram Bot with Google Drive Company Knowledge Base",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "b009d3de-40c0-4910-ab8d-525bea18adc2",
+      "name": "Расписание поиска лидов",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "searchQuery",
+              "value": "рестораны кафе Москва",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "googleSheetId",
+              "value": "1toQrsU0o6Avh_-DxcexpdE6xFxDmT3axmbq94ZORouA",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "whatsappPhoneId",
+              "value": "<__PLACEHOLDER_VALUE__WhatsApp Phone Number ID__>",
+              "type": "string"
+            },
+            {
+              "id": "id-5",
+              "name": "telegramChatId",
+              "value": "<__PLACEHOLDER_VALUE__Telegram Chat ID для уведомлений__>",
+              "type": "string"
+            },
+            {
+              "id": "id-6",
+              "name": "emailFrom",
+              "value": "<__PLACEHOLDER_VALUE__Email отправителя__>",
+              "type": "string"
+            },
+            {
+              "id": "id-7",
+              "name": "serperApiKey",
+              "value": "8c02e8532993970497e4baf5344ca9191bbf94a6",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "99c859cb-2d6d-4e04-aab0-b792bbdd2912",
+      "name": "Конфигурация воркфлоу",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Serper API response and extract company information\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Assuming the response is in item.json\n  const response = item.json;\n  \n  // Check if response has places array (typical Serper API structure)\n  if (response.places && Array.isArray(response.places)) {\n    for (const place of response.places) {\n      // Extract company information from Serper API response\n      const company = {\n        name: place.title || place.name || '',\n        address: place.address || '',\n        phone: (place.phoneNumber || place.phone || '').replace(/^\\+/, '') || '',\n        email: place.email || '',\n        website: place.website || place.link || '',\n        category: place.category || place.type || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n  // Alternative structure: if response has organic results\n  else if (response.organic && Array.isArray(response.organic)) {\n    for (const result of response.organic) {\n      const company = {\n        name: result.title || '',\n        address: result.address || '',\n        phone: (result.phoneNumber || result.phone || '').replace(/^\\+/, '') || '',\n        email: result.email || '',\n        website: result.link || result.url || '',\n        category: result.category || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n  // Handle local results structure\n  else if (response.localResults && Array.isArray(response.localResults)) {\n    for (const local of response.localResults) {\n      const company = {\n        name: local.title || local.name || '',\n        address: local.address || '',\n        phone: (local.phoneNumber || local.phone || '').replace(/^\\+/, '') || '',\n        email: local.email || '',\n        website: local.website || local.link || '',\n        category: local.category || local.type || ''\n      };\n      \n      results.push({ json: company });\n    }\n  }\n}\n\nreturn results;"
+      },
+      "id": "f84d51ec-b05e-497e-a97a-728501a31239",
+      "name": "Парсинг результатов",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Конфигурация воркфлоу').item.json.googleSheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 724762324,
+          "mode": "list",
+          "cachedResultName": "test-n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1toQrsU0o6Avh_-DxcexpdE6xFxDmT3axmbq94ZORouA/edit#gid=724762324"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "ffc19d8f-3398-46e4-8b23-f0162b3f8c82",
+      "name": "Сохранение в Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        784,
+        800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vknB4muXwHEdF2tq",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Сохранение в Google Sheets').item.json.phone }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8baddc29-6691-4229-8365-41c3617fa86c",
+      "name": "Проверка наличия телефона",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "58645f95-1cd7-4c79-a3bc-aa4e56135202",
+      "name": "Проверка наличия email",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        1016
+      ]
+    },
+    {
+      "parameters": {
+        "phoneNumberId": "={{ $('Конфигурация воркфлоу').item.json.whatsappPhoneId }}",
+        "recipientPhoneNumber": "={{ $('AI Agent - Генерация предложений').item.json.phone }}",
+        "template": "<__PLACEHOLDER_VALUE__Название WhatsApp шаблона__>"
+      },
+      "id": "654c98b7-1484-4827-8f37-8b7147a20da3",
+      "name": "Отправка в WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        2848,
+        944
+      ],
+      "webhookId": "42dd00bb-2c3d-4c01-aa5c-55503e25a943",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('AI Agent - Генерация предложений').item.json.email }}",
+        "subject": "Специальное предложение для вашего бизнеса",
+        "message": "={{ $('AI Agent - Генерация предложений').item.json.output }}",
+        "options": {
+          "senderName": "={{ $('Конфигурация воркфлоу').item.json.emailFrom }}"
+        }
+      },
+      "id": "ec0d293b-f640-401a-b1c3-63453ec73e9c",
+      "name": "Отправка на Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2848,
+        704
+      ],
+      "webhookId": "4861ba44-f0a1-49cc-b6b4-ea8941abc96a",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload-company-info",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "e5ef4b3d-6fed-4068-ab87-d346e064a761",
+      "name": "Загрузка базы знаний",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        208
+      ],
+      "webhookId": "a1134104-d630-454b-839e-6631b956ac7c"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "company_info"
+        }
+      },
+      "id": "3ebe77e2-e384-436a-915d-55af861dc45c",
+      "name": "Vector Store - Загрузка",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "9ed6153a-2b89-48b1-ad0d-0e82d385ab5f",
+      "name": "Document Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "741632f6-3ffe-4df6-9c4e-470d1210c058",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        96,
+        432
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "1334916d-84f2-491c-a5a8-2423aa80b778",
+      "name": "Embeddings - Загрузка",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        224
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qDXeYxn6I0FrTUIa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Поиск информации о нашей компании, продуктах и услугах для создания персонализированных предложений",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "id",
+          "value": "company_info"
+        }
+      },
+      "id": "5532b3ed-0a28-497c-9aa5-25eaae40c4ef",
+      "name": "Vector Store Tool",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        2256,
+        1072
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "cc5458f4-fa5e-446f-ae93-58aaa52a0e8a",
+      "name": "Embeddings - Tool",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        1280
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "qDXeYxn6I0FrTUIa",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Создай персонализированное коммерческое предложение для компании: {{ $json.name }}, категория: {{ $json.category }}, адрес: {{ $json.address }}",
+        "options": {
+          "systemMessage": "Ты - старший менеджер по продажам IT-компании AZAT.TEAM. Создай персонализированное коммерческое предложение для ресторана/кафе.\n\nИСПОЛЬЗУЙ БАЗУ ЗНАНИЙ О КОМПАНИИ AZAT.TEAM:\n- Специализация: команда кастомной разработки полного цикла\n- Опыт: 10+ лет, 27+ штатных специалистов, 3500+ проектов в IT\n- Основные направления: кастомное ПО, веб-разработка, мобильные приложения, техническая поддержка, DevOps\n- Отраслевой опыт: SaaS, e-commerce, HoReCa, недвижимость, медицина, образование\n- Технологии: PHP/Laravel, JavaScript/React/Vue, 1C-Битрикс, WordPress, мобильная разработка\n- Контакты: +7 978 295-70-04, @azatteam1, info@azat.team\n\nТВОИ ДЕЙСТВИЯ:\n1. Проанализируй тип заведения (ресторан/кафе) и его потенциальные IT-потребности\n2. Предложи релевантные решения из нашего спектра услуг\n3. Упомяни реальные преимущества: 27+ специалистов, 3500+ проектов, 10+ лет опыта\n4. Дай четкие контакты для связи\n\nСТРУКТУРА:\n- Персонализированное обращение с пониманием специфики заведения\n- Предложение IT-решений для оптимизации их бизнеса\n- Упоминание нашего опыта и экспертизы\n- Призыв к обсуждению конкретных потребностей\n\nВерни ТОЛЬКО текст предложения без дополнительных комментариев.",
+          "passthroughBinaryImages": true,
+          "enableStreaming": true
+        }
+      },
+      "id": "85f51be5-4d62-400b-9590-75d314060406",
+      "name": "AI Agent - Генерация предложений",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2160,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a5d8b53e-654b-4d92-b1cb-25d36edb8667",
+      "name": "DeepSeek Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        1072
+      ],
+      "credentials": {
+        "deepSeekApi": {
+          "id": "BHQLg9kDnquSpFF4",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/places",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"q\": $('Конфигурация воркфлоу').item.json.searchQuery } }}",
+        "options": {}
+      },
+      "id": "82286c63-ec52-45d7-b6ae-5c1678c65a33",
+      "name": "Поиск",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        112,
+        800
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "2oTVsSh01U37U69H",
+          "name": "Bearer Auth account"
+        },
+        "httpHeaderAuth": {
+          "id": "8wBkB02ni38MM9Vh",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5344c100-0888-4f70-a3bf-63c82fcfe00b",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "6b790292-b553-4279-90eb-a309bc83a811",
+              "name": "address",
+              "value": "={{ $json.address }}",
+              "type": "string"
+            },
+            {
+              "id": "fe4f46b7-0a3a-491c-aed3-39e344881efd",
+              "name": "phone",
+              "value": "={{ $json.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "85c087e7-f1c0-4218-a180-0716994c6ab8",
+              "name": "email",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "4e8d03a8-7d63-4e59-8ff1-51f31d1aa1d6",
+              "name": "website",
+              "value": "={{ $json.website }}",
+              "type": "string"
+            },
+            {
+              "id": "4ae503ca-2c12-49b5-8a64-1507411d3af1",
+              "name": "category",
+              "value": "={{ $json.category }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        800
+      ],
+      "id": "3b70e2de-1286-4a55-a4b5-4af98af38b93",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ 'whatsapp_daily_count:' + $now.toFormat('yyyy-MM-dd') }}",
+        "options": {}
+      },
+      "id": "67c94332-dd7d-4010-b5c8-0b79123cce7d",
+      "name": "Redis - Проверка лимита WhatsApp",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        728
+      ],
+      "credentials": {
+        "redis": {
+          "id": "wbbeJmVTEorWeUVI",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "={{ 'email_daily_count:' + $now.toFormat('yyyy-MM-dd') }}",
+        "options": {}
+      },
+      "id": "4c1fe109-7b2a-44ac-9525-be9cfa21f902",
+      "name": "Redis - Проверка лимита Email",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        1136
+      ],
+      "credentials": {
+        "redis": {
+          "id": "wbbeJmVTEorWeUVI",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ 'whatsapp_daily_count:' + $now.toFormat('yyyy-MM-dd') }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "id": "760fead7-be71-4681-9eed-f3eb73f7f10e",
+      "name": "Redis - Инкремент счетчика WhatsApp",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        800
+      ],
+      "credentials": {
+        "redis": {
+          "id": "wbbeJmVTEorWeUVI",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "={{ 'email_daily_count:' + $now.toFormat('yyyy-MM-dd') }}",
+        "expire": true,
+        "ttl": 86400
+      },
+      "id": "0ffe087b-61c1-4c32-b4e8-daa073b4e958",
+      "name": "Redis - Инкремент счетчика Email",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2624,
+        1088
+      ],
+      "credentials": {
+        "redis": {
+          "id": "wbbeJmVTEorWeUVI",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Redis - Проверка лимита WhatsApp').item.json.value ?? 0 }}",
+              "rightValue": 25,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "98ab4fcc-fce6-4cf4-8ee7-2251dc4d3a20",
+      "name": "Проверка лимита WhatsApp (25/день)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        728
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Redis - Проверка лимита Email').item.json.value ?? 0 }}",
+              "rightValue": "50",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9b271a94-828d-4cfa-8443-1135388adce6",
+      "name": "Проверка лимита Email (50/день)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "leads"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "address": "={{ $json.address }}",
+            "phone": "={{ $json.phone }}",
+            "email": "={{ $json.email }}",
+            "website": "={{ $json.website }}",
+            "category": "={{ $json.category }}",
+            "created_at": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e9ce17da-a3e4-4043-84d8-77179f4b87d1",
+      "name": "PostgreSQL - Сохранение лида",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1008,
+        944
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "1onM97lT9TEilEb6",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "name",
+          "value": "outreach_log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_name": "={{ $('AI Agent - Генерация предложений').item.json.name }}",
+            "contact_type": "={{ $('Отправка в WhatsApp').item.json ? 'whatsapp' : 'email' }}",
+            "contact_value": "={{ $('Отправка в WhatsApp').item.json ? $('AI Agent - Генерация предложений').item.json.phone : $('AI Agent - Генерация предложений').item.json.email }}",
+            "sent_at": "={{ $now }}",
+            "status": "sent"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_name",
+              "displayName": "lead_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_type",
+              "displayName": "contact_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "contact_value",
+              "displayName": "contact_value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cad8c942-162e-4a0b-96dd-edaa7b083b90",
+      "name": "PostgreSQL - Логирование отправки",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3072,
+        848
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "1onM97lT9TEilEb6",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Расписание поиска лидов": {
+      "main": [
+        [
+          {
+            "node": "Конфигурация воркфлоу",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Конфигурация воркфлоу": {
+      "main": [
+        [
+          {
+            "node": "Поиск",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсинг результатов": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Сохранение в Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Проверка наличия телефона",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "PostgreSQL - Сохранение лида",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка наличия телефона": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis - Проверка лимита WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Проверка наличия email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка наличия email": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis - Проверка лимита Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Загрузка базы знаний": {
+      "main": [
+        [
+          {
+            "node": "Vector Store - Загрузка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Vector Store - Загрузка",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings - Загрузка": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store - Загрузка",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings - Tool": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Генерация предложений": {
+      "main": [
+        [
+          {
+            "node": "Отправка в WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Отправка на Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis - Инкремент счетчика WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis - Инкремент счетчика Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Поиск": {
+      "main": [
+        [
+          {
+            "node": "Парсинг результатов",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Сохранение в Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PostgreSQL - Сохранение лида": {
+      "main": [
+        [
+          {
+            "node": "Проверка наличия телефона",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis - Проверка лимита WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Проверка лимита WhatsApp (25/день)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка лимита WhatsApp (25/день)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis - Инкремент счетчика WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Отправка в WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправка в WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL - Логирование отправки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis - Проверка лимита Email": {
+      "main": [
+        [
+          {
+            "node": "Проверка лимита Email (50/день)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Проверка лимита Email (50/день)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Генерация предложений",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis - Инкремент счетчика Email": {
+      "main": [
+        [
+          {
+            "node": "Отправка на Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Отправка на Email": {
+      "main": [
+        [
+          {
+            "node": "PostgreSQL - Логирование отправки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "02600dfc-5342-4cfa-a2d8-47064a5e692b",
+  "meta": {
+    "instanceId": "bbfa5f7c96e27bc6f23f9e6b62e6e7acf6ae0a214bb518958b0145287aa51a70"
+  },
+  "id": "T3PbxrjD9KWmJZJ7",
+  "tags": []
+}
