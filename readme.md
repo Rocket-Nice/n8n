@@ -8,7 +8,7 @@ sk-84395b9ebca34bf78eb770c2e3d7cf36
 text
 
 ### Google Gemini:
-AIzaSyCRy7S4eyuEJVYl4uxwiyhBizI_9MGAyyY
+AIzaSyCeqGvSkXw_gf28KLl5tNhM0bFRYKqGH_4
 
 text
 
